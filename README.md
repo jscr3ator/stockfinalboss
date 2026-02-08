@@ -1,5 +1,5 @@
 # StockFinalBoss
-> Check out the demo [here](https://stockfinalboss.jscreator.dev/)
+> Check out the public demo [here](https://stockfinalboss.jscreator.dev/)
 
 **Simulate stocks with others!**
 
