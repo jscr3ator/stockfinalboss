@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Game - Play</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="game-header">
+        <div class="stats-group">
+            <div class="stat-item">
+                <span class="stat-label">Net Worth</span>
+                <span class="stat-value" id="net-worth">$500.00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Performance</span>
+                <span class="stat-value" id="gain-loss">+$0.00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Available Cash</span>
+                <span class="stat-value" id="balance">$500.00</span>
+            </div>
+        </div>
+        <div id="portfolio-summary" class="flex items-center gap-10"></div>
+    </div>
+
+    <div class="container">
+        <div class="game-container">
+            <main>
+                <h2 style="margin-top:0">Market Listings</h2>
+                <div id="stocks" class="stocks-grid"></div>
+            </main>
+            
+            <aside>
+                <div class="leaderboard-panel">
+                    <h3 style="margin-top:0">Leaderboard</h3>
+                    <div id="leaderboard"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        if (!username) window.location.href = '/';
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}`);
+        
+        let myCash = 500;
+        let myPortfolio = {};
+        let currentStocks = [];
+        let lastNetWorth = 500;
+        let charts = {};
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ type: 'join', username }));
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'init' || data.type === 'prices') {
+                currentStocks = data.stocks;
+                updateMarketUI();
+                updateNetWorth();
+            }
+
+            if (data.type === 'update_player') {
+                myCash = data.balance;
+                myPortfolio = data.portfolio;
+                document.getElementById('balance').innerText = `$${myCash.toFixed(2)}`;
+                updatePortfolioUI();
+                updateNetWorth();
+            }
+
+            if (data.type === 'leaderboard') {
+                const lbDiv = document.getElementById('leaderboard');
+                lbDiv.innerHTML = data.leaderboard.map((p, i) => `
+                    <div class="leaderboard-row">
+                        <span><span class="rank">#${i+1}</span> ${p.username}</span>
+                        <span class="stat-value" style="font-size: 0.9rem">$${p.balance.toFixed(0)}</span>
+                    </div>
+                `).join('');
+            }
+        };
+
+        function updateMarketUI() {
+            const stocksDiv = document.getElementById('stocks');
+            currentStocks.forEach(s => {
+                let card = document.getElementById(`stock-${s.id}`);
+                if (!card) {
+                    card = document.createElement('div');
+                    card.id = `stock-${s.id}`;
+                    card.className = 'stock-card';
+                    card.innerHTML = `
+                        <div class="stock-info">
+                            <div>
+                                <h3 class="stock-name" style="margin:0"></h3>
+                                <span class="stock-badge"></span>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper"><canvas id="chart-${s.id}"></canvas></div>
+                        <div class="price-display"></div>
+                        <div class="trade-actions">
+                            <button class="btn-buy">Buy</button>
+                            <button class="btn-sell">Sell</button>
+                        </div>
+                    `;
+                    stocksDiv.appendChild(card);
+                }
+                
+                const badgeClass = `badge-${s.type.toLowerCase()}`;
+                const nameEl = card.querySelector('.stock-name');
+                const badgeEl = card.querySelector('.stock-badge');
+                const priceEl = card.querySelector('.price-display');
+                const buyBtn = card.querySelector('.btn-buy');
+                const sellBtn = card.querySelector('.btn-sell');
+
+                nameEl.innerText = s.name;
+                badgeEl.innerText = `${s.type} Risk`;
+                badgeEl.className = `stock-badge ${badgeClass}`;
+                priceEl.innerText = `$${s.price.toFixed(2)}`;
+                
+                buyBtn.onclick = () => trade(s.id, 'buy', 1);
+                sellBtn.onclick = () => trade(s.id, 'sell', 1);
+
+                updateChart(s);
+            });
+        }
+
+        function updateChart(stock) {
+            const ctx = document.getElementById(`chart-${stock.id}`).getContext('2d');
+            const color = stock.type === 'Safe' ? '#10b981' : (stock.type === 'Moderate' ? '#f59e0b' : '#ef4444');
+            
+            if (charts[stock.id]) {
+                charts[stock.id].data.datasets[0].data = stock.history;
+                charts[stock.id].data.datasets[0].borderColor = color;
+                charts[stock.id].update('none');
+            } else {
+                charts[stock.id] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: stock.history.map((_, i) => i),
+                        datasets: [{
+                            data: stock.history,
+                            borderColor: color,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { display: false }, y: { display: false } }
+                    }
+                });
+            }
+        }
+
+        function updateNetWorth() {
+            let worth = myCash;
+            currentStocks.forEach(s => {
+                if (myPortfolio[s.id]) worth += s.price * myPortfolio[s.id];
+            });
+            
+            const diff = worth - lastNetWorth;
+            const glSpan = document.getElementById('gain-loss');
+            glSpan.innerText = (diff >= 0 ? '+' : '') + diff.toFixed(2);
+            glSpan.className = 'stat-value ' + (diff >= 0 ? 'text-success' : 'text-danger');
+            
+            document.getElementById('net-worth').innerText = `$${worth.toFixed(2)}`;
+            lastNetWorth = worth;
+        }
+
+        function updatePortfolioUI() {
+            const summary = document.getElementById('portfolio-summary');
+            const holdings = Object.entries(myPortfolio)
+                .filter(([_, qty]) => qty > 0)
+                .map(([id, qty]) => {
+                    const stock = currentStocks.find(s => s.id == id);
+                    return `<span style="font-size: 0.8rem; background: #374151; padding: 2px 8px; border-radius: 4px;">${stock ? stock.name : id}: ${qty}</span>`;
+                }).join('');
+            summary.innerHTML = holdings;
+        }
+
+        function trade(stockId, action, quantity) {
+            ws.send(JSON.stringify({ type: 'trade', stockId, action, quantity }));
+        }
+    </script>
+</body>
+</html>

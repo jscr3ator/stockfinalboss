@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Final Boss - Join</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <!-- Added Inter font for cleaner typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* Base page styles */
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Container styling */
+        .login-card {
+            background: rgba(31, 41, 55, 0.75);
+            backdrop-filter: blur(12px); /* Glassmorphism effect */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 48px 40px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Input styling */
+        input {
+            width: 100%;
+            padding: 16px;
+            margin: 24px 0;
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid #4b5563;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            background: rgba(17, 24, 39, 0.8);
+        }
+        input::placeholder {
+            color: #6b7280;
+        }
+
+        /* Button styling */
+        .btn-join {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(to right, #2563eb, #3b82f6);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .btn-join:hover {
+            background: linear-gradient(to right, #1d4ed8, #2563eb);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+        .btn-join:active {
+            transform: translateY(0);
+        }
+
+        /* Link styling */
+        .host-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .host-link:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+
+        /* Typography helpers */
+        h1 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p {
+            color: #9ca3af;
+            font-size: 0.95rem;
+            margin-top: 0;
+        }
+
+        /* Footer Credit Section */
+        .credits {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        .credits a {
+            color: #9ca3af;
+            text-decoration: none;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+        .credits a:hover {
+            color: white;
+        }
+        .heart {
+            color: #ef4444;
+            display: inline-block;
+            animation: beat 1.5s infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes beat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>Stock Final Boss</h1>
+        <p>Enter your username to start trading</p>
+        
+        <form action="/game" method="GET">
+            <input type="text" name="username" placeholder="Enter Username" required autocomplete="off">
+            <button type="submit" class="btn-join">Start Playing</button>
+        </form>
+        
+        <a href="/host" class="host-link">View Leaderboard</a>
+
+        <div class="credits">
+            Made for InspiritAI EVHS Workshop 2026 with <span class="heart">♥</span> by <a href="https://github.com/VivaanCode" target="_blank">Vivaan</a> and <a href="https://jscreator.dev" target="_blank">Jeremiah</a>
+        </div>
+    </div>
+</body>
+</html>
